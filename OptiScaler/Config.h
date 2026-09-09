@@ -269,6 +269,8 @@ class Config
     // Toggles the pass in game. Unbound by default -- a key that does something unexpected is worse
     // than one that does nothing.
     CustomOptional<int> DlssNrToggleKey { UnboundKey };
+    // Saves a viewable NR-off / NR-on PNG pair to a Screenshots folder. Default F5 (0x74).
+    CustomOptional<int> DlssNrScreenshotKey { 0x74 };
     CustomOptional<uint32_t> DlssNrPreset { 0 };
     CustomOptional<float> DlssNrIntensity { 1.0f };
     // 0 default (standard), 1 natural, 2 cinematic -- the model's own processing profiles.

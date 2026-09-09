@@ -162,6 +162,7 @@ static float lastMenuScale = 0.0f;
 static CustomOptional<uint32_t> comboPreset { 0 };
 static int lastKey = 0;
 static bool inputDlssNr = false;
+static bool inputDlssNrScreenshot = false;
 static bool capturingKey = false;
 
 template <typename T, size_t N> struct RingBuffer
@@ -281,6 +282,8 @@ void MenuCommon::UpdateManualInput(HWND targetHwnd)
                       "Menu key pressed, will be switching FPS mode");
         CheckShortcut(config->DlssNrToggleKey.value_or_default(), inputDlssNr,
                       "Neural Rendering key pressed, will be toggling the pass");
+        CheckShortcut(config->DlssNrScreenshotKey.value_or_default(), inputDlssNrScreenshot,
+                      "Neural Rendering screenshot key pressed, will save NR on/off PNGs");
     }
     else if (capturingKey)
     {
@@ -1328,6 +1331,17 @@ void MenuCommon::HandleMenuShortcuts(RenderMenuContext& ctx)
             ImGuiToast toast { ImGuiToastType::Info, 2000 };
             toast.setTitle("DLSS Neural Rendering");
             toast.setContent(config->DlssNrEnabled.value_or_default() ? "On" : "Off");
+            ImGui::InsertNotification(toast);
+        }
+
+        if (inputDlssNrScreenshot)
+        {
+            inputDlssNrScreenshot = false;
+            DlssNr::RequestScreenshot();
+
+            ImGuiToast toast { ImGuiToastType::Info, 2000 };
+            toast.setTitle("DLSS Neural Rendering");
+            toast.setContent("Saving NR on/off screenshots to Screenshots folder");
             ImGui::InsertNotification(toast);
         }
 

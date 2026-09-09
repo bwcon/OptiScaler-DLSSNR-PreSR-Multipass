@@ -17,9 +17,12 @@
 #include <d3d12.h>
 
 #include <cstdio>
+#include <ctime>
 #include <filesystem>
 #include <string>
 #include <vector>
+
+#include "DlssNr_Png.h"
 
 namespace capture
 {
@@ -39,7 +42,7 @@ class FrameCapture
 {
   public:
     // Asks for a capture. Ignored if one is already running.
-    void request(unsigned int frames)
+    void request(unsigned int frames, bool png = false)
     {
         if (active_)
             return;
@@ -47,7 +50,11 @@ class FrameCapture
         wanted_ = frames > kMaxFrames ? kMaxFrames : frames;
         captured_ = 0;
         active_ = wanted_ > 0;
+        png_ = png;
     }
+
+    // True when this run is a user screenshot (viewable PNGs) rather than the raw measurement dump.
+    bool isPng() const { return png_; }
 
     bool isActive() const { return active_; }
     unsigned int progress() const { return captured_; }
@@ -108,15 +115,33 @@ class FrameCapture
         if (captured_ > 0 && isDark(beforeShots_[0]))
         {
             const unsigned int frames = wanted_;
+            const bool wasPng = png_;
             release();
             ready_ = false;
             active_ = false;
-            request(frames);
+            request(frames, wasPng);
             return {};
         }
 
         std::error_code ec;
         std::filesystem::create_directories(directory, ec);
+
+        // User screenshot: one shot, before = NR off, after = NR on, written as viewable PNGs.
+        if (png_)
+        {
+            std::string outPath;
+
+            if (captured_ > 0)
+            {
+                const std::string stamp = timestamp();
+                if (dumpPng(directory, "NRoff_" + stamp, beforeShots_[0], beforeDesc_))
+                    outPath = (directory / ("NRoff_" + stamp + ".png")).string();
+                dumpPng(directory, "NRon_" + stamp, afterShots_[0], afterDesc_);
+            }
+
+            release();
+            return outPath;
+        }
 
         for (unsigned int i = 0; i < captured_; ++i)
         {
@@ -144,9 +169,44 @@ class FrameCapture
         active_ = false;
         ready_ = false;
         captured_ = 0;
+        png_ = false;
     }
 
   private:
+    // Map one shot's readback and write it as a viewable PNG. Returns false on any failure, which
+    // leaves the screenshot simply not written rather than taking the game down.
+    static bool dumpPng(const std::filesystem::path& dir, const std::string& name, Shot& shot,
+                        const D3D12_RESOURCE_DESC& desc)
+    {
+        if (shot.readback == nullptr)
+            return false;
+
+        void* mapped = nullptr;
+        D3D12_RANGE range = { 0, (SIZE_T) shot.bytes };
+
+        if (FAILED(shot.readback->Map(0, &range, &mapped)) || mapped == nullptr)
+            return false;
+
+        const auto path = dir / (name + ".png");
+        const bool ok =
+            dlssnr_png::WritePng(path.wstring(), mapped, shot.layout.Footprint.RowPitch,
+                                 (unsigned int) desc.Width, desc.Height, (int) desc.Format);
+
+        D3D12_RANGE written = { 0, 0 };
+        shot.readback->Unmap(0, &written);
+        return ok;
+    }
+
+    static std::string timestamp()
+    {
+        std::time_t t = std::time(nullptr);
+        std::tm tmv = {};
+        localtime_s(&tmv, &t);
+        char buf[32];
+        std::strftime(buf, sizeof(buf), "%Y%m%d_%H%M%S", &tmv);
+        return buf;
+    }
+
     bool ensure(ID3D12Device* device, ID3D12Resource* before, ID3D12Resource* after)
     {
         if (!beforeShots_.empty())
@@ -341,5 +401,6 @@ class FrameCapture
     unsigned int captured_ = 0;
     bool active_ = false;
     bool ready_ = false;
+    bool png_ = false;
 };
 } // namespace capture

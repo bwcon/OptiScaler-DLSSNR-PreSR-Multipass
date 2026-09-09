@@ -132,5 +132,8 @@ std::optional<double> LastGpuTime();
 void RequestCapture(unsigned int frames);
 bool CaptureInProgress();
 
+// User screenshot: captures one frame and writes viewable NR-off / NR-on PNGs to the Screenshots folder.
+void RequestScreenshot();
+
 void Shutdown();
 } // namespace DlssNr

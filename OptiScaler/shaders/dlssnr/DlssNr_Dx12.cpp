@@ -2108,7 +2108,9 @@ void DlssNr_Dx12::Dispatch(ID3D12GraphicsCommandList* cmdList, ID3D12Resource* c
     if (g_captureWriteAtFrame != 0 && g_frames >= g_captureWriteAtFrame)
     {
         g_captureWriteAtFrame = 0;
-        const auto captureDir = Util::DllPath().remove_filename() / "dlssnr-capture";
+        const auto base = Util::DllPath().remove_filename();
+        // A user screenshot goes to Screenshots as viewable PNGs; the raw measurement dump keeps its own dir.
+        const auto captureDir = g_capture.isPng() ? (base / "Screenshots") : (base / "dlssnr-capture");
         const auto written = g_capture.write(captureDir);
 
         if (!written.empty())
@@ -3382,6 +3384,12 @@ void RequestCapture(unsigned int frames)
 {
     ClearCaptureDirectory();
     g_capture.request(frames);
+}
+
+void RequestScreenshot()
+{
+    // One frame, PNG output. No ClearCaptureDirectory: the Screenshots folder keeps timestamped files.
+    g_capture.request(1, true);
 }
 
 bool CaptureInProgress() { return g_capture.isActive(); }

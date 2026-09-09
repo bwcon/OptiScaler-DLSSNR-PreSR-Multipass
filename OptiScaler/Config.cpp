@@ -327,6 +327,7 @@ bool Config::Reload(std::filesystem::path iniPath)
             if (DlssNrPrecision.value_or_default() != 4) DlssNrPrecision = 0u;
             DlssNrResidualFgApproxCamera.set_from_config(readBool("DlssNr", "ResidualFGApproxCamera"));
             DlssNrToggleKey.set_from_config(readInt("DlssNr", "ToggleKey"));
+            DlssNrScreenshotKey.set_from_config(readInt("DlssNr", "ScreenshotKey"));
             DlssNrTransferStrength.set_from_config(readFloat("DlssNr", "TransferStrength"));
             DlssNrColourStrength.set_from_config(readFloat("DlssNr", "ColourStrength"));
             DlssNrMaxRatio.set_from_config(readFloat("DlssNr", "MaxRatio"));
@@ -1252,6 +1253,10 @@ bool Config::SaveIni()
     {
         auto toggle = Instance()->DlssNrToggleKey.value_for_config();
         ini.SetValue("DlssNr", "ToggleKey", GetIntValue(toggle, toggle > 0).c_str());
+    }
+    {
+        auto shot = Instance()->DlssNrScreenshotKey.value_for_config();
+        ini.SetValue("DlssNr", "ScreenshotKey", GetIntValue(shot, shot > 0).c_str());
     }
     ini.SetValue("DlssNr", "TransferStrength",
                  GetFloatValue(Instance()->DlssNrTransferStrength.value_for_config()).c_str());

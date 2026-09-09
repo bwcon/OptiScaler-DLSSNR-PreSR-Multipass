@@ -837,6 +837,12 @@ copy NUL "$(SolutionDir)x64\Release\a\!! EXTRACT ALL FILES TO GAME FOLDER !!" /Y
     <ClInclude Include="shaders\dlssnr\DlssNr_ActiveColor.h" />
     <ClCompile Include="shaders\dlssnr\DlssNr_Vk.cpp" />
     <ClCompile Include="dlssnr\DlssNrFeature_Vk.cpp" />
+    <ClCompile Include="dlssnr\DlssNr_Png.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='ReleaseDebug|x64'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+    </ClCompile>
+    <ClInclude Include="dlssnr\DlssNr_Png.h" />
     <ClCompile Include="dlssnr\DlssNr_ExposureScan.cpp" />
     <ClCompile Include="dlssnr\DlssNr_Proxy.cpp" />
     <ClCompile Include="dlssnr\DlssNr_Menu.cpp" />
